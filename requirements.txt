@@ -1,0 +1,6 @@
+google-adk[extensions]
+pandas
+numpy
+mcp
+google-generativeai
+rich
