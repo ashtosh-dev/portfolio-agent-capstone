@@ -12,16 +12,37 @@ from google.adk.runners import InMemoryRunner
 from google.genai.types import Content, Part
 
 
-# Define the Workflow graph:
-# START -> context_agent -> quant_agent -> strategist_agent -> END
-portfolio_workflow = Workflow(
-    name="portfolio_strategist_workflow",
-    edges=[
-        ("START", context_agent),
-        (context_agent, quant_agent),
-        (quant_agent, strategist_agent)
-    ]
-)
+from google.adk.workflow import node
+from google.adk import Context
+from typing import Any
+
+@node(name="portfolio_orchestrator", rerun_on_resume=True)
+async def portfolio_orchestrator(ctx: Context, node_input: Any) -> str:
+    # Extract prompt text
+    request_text = node_input
+    if hasattr(node_input, "parts") and node_input.parts:
+        request_text = "".join([p.text for p in node_input.parts if hasattr(p, "text") and p.text])
+        
+    # 1. Context Agent fetches live Yahoo Finance data
+    context_output = await ctx.run_node(context_agent, node_input=request_text)
+    
+    # 2. Quant Agent computes weighted returns and expense ratios
+    quant_output = await ctx.run_node(quant_agent, node_input=context_output)
+    
+    # 3. Strategist Agent receives Context and Quant data explicitly
+    combined_prompt = f"""Please synthesize the following data into the final client report:
+    
+User request:
+{request_text}
+
+Live Market Data from Context Agent:
+{context_output}
+
+Quantitative calculations from Quant Agent:
+{quant_output}
+"""
+    final_report = await ctx.run_node(strategist_agent, node_input=combined_prompt)
+    return final_report
 
 def main():
     # Prompt the user for input or use a default investment request
@@ -46,7 +67,7 @@ def main():
         
     try:
         # Initialize InMemoryRunner with the workflow graph
-        runner = InMemoryRunner(node=portfolio_workflow)
+        runner = InMemoryRunner(node=portfolio_orchestrator)
         runner.auto_create_session = True
         
         print("\nExecuting workflow steps...")

@@ -4,3 +4,4 @@ numpy
 mcp
 google-generativeai
 rich
+yfinance
