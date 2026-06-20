@@ -75,6 +75,13 @@ To run with custom target allocations:
 python main_workflow.py "Create a portfolio with 50% QQQ, 30% VOO, and 20% BND. Compute weighted returns and cost."
 ```
 
+### Running the Streamlit Web GUI
+To launch the interactive dashboard:
+```bash
+streamlit run app.py
+```
+This opens the "Autonomous Portfolio & ETF Strategist" web dashboard in your browser, where you can select asset tickers and customize allocations.
+
 ### Running with ADK CLI / Web UI
 You can run agents individually using the ADK CLI:
 ```bash
